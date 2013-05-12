@@ -6,7 +6,8 @@ Those are Midnight Commander extfs plugins for handling several archive types.
 
 Installation
 ============
-See individual installation plugins below. Basically it come down to:
+
+See individual installation plugins below. Basically it comes down to:
 
 * copying ``extfslib.py`` and plugin files to ``~/.local/share/mc/extfs/``
 * installing binary handlers (lha, unlzx, xdms and unadf)
@@ -18,16 +19,19 @@ See individual installation plugins below. Basically it come down to:
 
 ULha
 ====
+
 ULha is an extfs plugin which can be used with lha/lzh/lharc archives.
 Personally, I've use it almost exclusively for archives created long time ago
-on my Amiga. Both reading and writing into archive was implemented.
+on my Amiga. Both reading from and writing into archive was implemented.
 
 Requirements
 ------------
+
 ULha requires `free lha <http://lha.sourceforge.jp>`_ implementation to work.
 
 Installation
 ------------
+
 * copy ``extfslib.py`` and ``ulha`` to ``~/.local/share/mc/extfs/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
@@ -38,24 +42,27 @@ Installation
 
 ULzx
 ====
+
 ULzx is an extfs plugin which can be used to browse and extract lzx archives,
 which are known almost exclusively from Amiga.
 
 Due to limitations of
 `unlzx <ftp://us.aminet.net/pub/aminet/misc/unix/unlzx.c.gz.readme>`_ tools,
 only reading is supported. Also be aware, that
-`unlzx <ftp://us.aminet.net/pub/aminet/misc/unix/unlzx.c.gz.readme>`_ tool
-cannot extract files individually, so copying entire archive content is not
-recommended, since on every file a full archive extract would be performed,
-which in the end would have impact on performance.
+`unlzx <ftp://us.aminet.net/pub/aminet/misc/unix/unlzx.c.gz.readme>`_ cannot
+extract files individually, so copying entire archive content is not
+recommended, since on every single file a full archive extract would be
+performed, which in the end would have impact on performance.
 
 Requirements
 ------------
+
 ULzx requires
 `unlzx <ftp://us.aminet.net/pub/aminet/misc/unix/unlzx.c.gz.readme>`_ tool.
 
 Installation
 ------------
+
 * copy ``extfslib.py`` and ``ulzx`` to ``~/.local/share/mc/extfs/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
@@ -66,6 +73,7 @@ Installation
 
 UAdf
 ====
+
 UAdf is an extfs plugin suitable for reading .adf, .adz and .dms Amiga floppy
 disk images. Due to limitations of the
 `unadf <http://freecode.com/projects/unadf>`_, file access inside disk image is
@@ -112,6 +120,7 @@ needed.
 
 Installation
 ------------
+
 * copy ``extfslib.py`` and ``uadf`` to ``~/.local/share/mc/extfs/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
