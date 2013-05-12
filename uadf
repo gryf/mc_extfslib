@@ -1,0 +1,168 @@
+#! /usr/bin/env python
+"""
+UADF Virtual filesystem
+
+This extfs provides quick and dirty read-only access to disk image files for
+the Commodore Amiga adf or adz (gzipped adfs) and dms.
+
+It requires the unadf utility (unfortunately there is no original sources,
+since authors page doesn't exists anymore. Luckily, there is a copy of the
+source (and useful patches) in Debian repository:
+http://packages.debian.org/sid/unadf
+
+There should be one change made to the source of unadf, though. While using
+"-lr" switch it by default also displays comments, separated by the comma.
+However there is no way to distinguish where filename ends and comment starts,
+if comment or filename already contains any comma.
+
+It also requires xdms utility, for optional dms support.
+
+Changelog:
+    1.1 Moved common code into extfslib library
+    1.0 Initial release
+
+Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
+Date: 2013-05-12
+Version: 1.1
+Licence: BSD
+"""
+
+import sys
+import re
+import os
+import gzip
+from subprocess import check_output, check_call, CalledProcessError
+from tempfile import mkstemp, mkdtemp
+import shutil
+
+from extfslib import Archive, parse_args
+
+
+class UAdf(Archive):
+    """
+    Class for interact with c1541 program and MC
+    """
+    LINE_PAT = re.compile('\s*(?P<size>\d+)?'
+                          '\s{2}(?P<date>\d{4}/\d{2}/\d{2})'
+                          '\s{2}\s?(?P<time>\d+:\d{2}:\d{2})'
+                          '\s{2}(?P<fpath>.*)')
+    ARCHIVER = "unadf"
+    DMS = "xdms"
+    CMDS = {"list": "-lr",
+            "read": "r",
+            "write": "w",
+            "delete": "d"}
+    DATETIME = "%s-%s-%s %02d:%s"
+    ITEM = ("%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
+            "%(display_name)s\n")
+
+    def __init__(self, fname):
+        """Prepare archive content for operations"""
+        self._clean = True
+        self._arch = fname
+
+        if fname.lower().endswith(".adz"):
+            self._ungzip()
+
+        if fname.lower().endswith(".dms"):
+            self._undms()
+
+        super(UAdf, self).__init__(self._arch)
+
+    def __del__(self):
+        """Cleanup"""
+        if not self._clean:
+            try:
+                os.unlink(self._arch)
+            except OSError:
+                pass
+
+    def _parse_dt(self, date, time):
+        """Return parsed datetime which fulfill extfs standards date."""
+        year, month, day = date.split("/")
+        hours, minutes, _unused = time.split(":")
+        return self.DATETIME % (month, day, year, int(hours), minutes)
+
+    def _ungzip(self):
+        """Create temporary file for ungzipped adf file since unadf does not
+        accept gzipped content in any way including reading from stdin."""
+        fdesc, tmp_fname = mkstemp(suffix=".adf")
+        os.close(fdesc)
+
+        with gzip.open(self._arch) as gobj:
+            with open(tmp_fname, "wb") as fobj:
+                fobj.write(gobj.read())
+        self._arch = tmp_fname
+        self._clean = False
+
+    def _undms(self):
+        """Create temporary adf file extracted from dms."""
+        fdesc, tmp_fname = mkstemp(suffix=".adf")
+        os.close(fdesc)
+
+        try:
+            check_call([self.DMS, '-q', 'u', self._arch, "+" + tmp_fname])
+            self._arch = tmp_fname
+            self._clean = False
+        except (CalledProcessError, OSError):
+            pass
+
+    def _get_dir(self):
+        """Retrieve directory"""
+        contents = []
+        with open(os.devnull, "w") as fnull:
+            try:
+                out = check_output([self.ARCHIVER, self.CMDS['list'],
+                                    self._arch], stderr=fnull)
+            except CalledProcessError:
+                return contents
+
+        for line in out.split("\n"):
+            match = self.LINE_PAT.match(line)
+            if not match:
+                continue
+
+            entry = match.groupdict()
+            entry['perms'] = "-rw-r--r--"
+            if not entry['size']:
+                entry['perms'] = "drwxr-xr-x"
+                entry['size'] = "0"
+            entry['display_name'] = self._map_name(entry['fpath'])
+            entry['datetime'] = self._parse_dt(entry['date'], entry['time'])
+            entry['uid'] = self._uid
+            entry['gid'] = self._gid
+            contents.append(entry)
+
+        return contents
+
+    def list(self):
+        """
+        Output list contents of adf image.
+        Convert filenames to be Unix filesystem friendly
+        Add suffix to show user what kind of file do he dealing with.
+        """
+        for entry in self._contents:
+            sys.stdout.write(self.ITEM % entry)
+        return 0
+
+    def copyout(self, src, dst):
+        """Copy file form the adf image."""
+        real_src = self._get_real_name(src)
+        if not real_src:
+            raise IOError("No such file or directory")
+
+        extract_dir = mkdtemp()
+        cmd = ["unadf", self._arch, real_src, "-d", extract_dir]
+        if check_call(cmd, stdout=open(os.devnull, 'wb'),
+                      stderr=open(os.devnull, 'wb')) != 0:
+            shutil.rmtree(extract_dir)
+            sys.stderr.write("unadf returned with nonzero exit code\n")
+            return 1
+
+        shutil.move(os.path.join(extract_dir, real_src), dst)
+        shutil.rmtree(extract_dir)
+
+        return 0
+
+if __name__ == "__main__":
+    sys.exit(parse_args(UAdf))

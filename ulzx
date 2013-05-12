@@ -1,0 +1,128 @@
+#! /usr/bin/env python
+"""
+Read only, Amiga LZX[1] archiver Virtual filesystem executive for Midnight
+Commander.
+
+Tested against python 2.7, unlzx[1] 1.1 and mc 4.8.7
+
+[1] ftp://us.aminet.net/pub/aminet/misc/unix/unlzx.c.gz.readme
+
+Changelog:
+    1.1 Moved common code into extfslib library
+    1.0 Initial release
+
+Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
+Date: 2013-05-12
+Version: 1.1
+Licence: BSD
+"""
+import os
+import sys
+import re
+import shutil
+from subprocess import call, CalledProcessError
+from tempfile import mkdtemp, mkstemp
+
+from extfslib import Archive, parse_args
+
+
+class ULzx(Archive):
+    """Archive handle. Provides interface to MC's extfs subsystem"""
+    LINE_PAT = re.compile("^\s+(?P<size>\d+)\s+"
+                          "((n/a)|\d+)\s"
+                          "(?P<time>\d{2}:\d{2}:\d{2})\s+"
+                          "(?P<date>\d+-[a-z]{3}-\d{4})\s"
+                          "(?P<perms>[h-][s-][p-][a-][r-][w-][e-][d-])\s"
+                          "\"(?P<fpath>.*)\"")
+    ARCHIVER = "unlzx"
+    CMDS = {"list": "-v",
+            "read": "-x"}
+    DATETIME = "%02d-%02d-%s %02d:%02d"
+
+    def _get_date(self, time, date):
+        """Return MM-DD-YYYY hh:mm formatted date out of time and date
+        strings"""
+        month_list = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug",
+                      "sep", "oct", "nov", "dec"]
+        day, month, year = date.split("-")
+        month = month_list.index(month) + 1
+        hours, minutes, dummy = time.split(":")
+        return self.DATETIME % (month, int(day), year, int(hours), int(minutes))
+
+    def _get_dir(self):
+        """Prepare archive file listing"""
+        contents = []
+
+        out = self._call_command("list")
+        if not out:
+            return
+
+        for line in out.split("\n"):
+            match = self.LINE_PAT.match(line)
+            if not match:
+                continue
+
+            entry = match.groupdict()
+            entry['datetime'] = self._get_date(entry['time'], entry['date'])
+            entry['display_name'] = self._map_name(entry['fpath'])
+            entry['perms'] = "-rw-r--r--"  # lzx doesn't store empty dirs
+            entry['uid'] = self._uid
+            entry['gid'] = self._gid
+            contents.append(entry)
+
+        return contents
+
+    def list(self):
+        """Output contents of the archive to stdout"""
+        for entry in self._contents:
+            sys.stdout.write(self.ITEM % entry)
+        return 0
+
+    def run(self, dst):
+        """Execute file out of archive"""
+        fdesc, tmp_file = mkstemp()
+        os.close(fdesc)
+        result = 0
+
+        if self.copyout(dst, tmp_file) != 0:
+            result = 1
+
+        os.chmod(tmp_file, int("700", 8))
+
+        try:
+            result = call([tmp_file])
+        finally:
+            try:
+                os.unlink(tmp_file)
+            except OSError:
+                pass
+
+        return result
+
+    def copyout(self, src, dst):
+        """Unfortunately, to copy one file out entire LZX archive have to be
+        extracted. For small archives is not a problem, but in relatively big
+        one it could be a performance issue."""
+        tmp_dir = mkdtemp()
+        src = self._get_real_name(src)
+        current_dir = os.path.abspath(os.curdir)
+        os.chdir(tmp_dir)
+
+        try:
+            with open(os.devnull, "w") as fnull:
+                result = call([self.ARCHIVER, self.CMDS['read'],
+                               os.path.join(current_dir, self._arch)],
+                              stdout=fnull, stderr=fnull)
+            if result == 0:
+                shutil.copy2(src, dst)
+        except CalledProcessError:
+            return 1
+        finally:
+            shutil.rmtree(tmp_dir)
+            os.chdir(current_dir)
+
+        return result
+
+
+if __name__ == "__main__":
+    sys.exit(parse_args(ULzx))
