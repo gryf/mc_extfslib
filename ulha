@@ -7,12 +7,13 @@ Tested against python 2.7, lha[1] 1.14 and mc 4.8.7
 [1] http://lha.sourceforge.jp
 
 Changelog:
+    1.2 Moved item pattern to extfslib module
     1.1 Moved common code into extfslib library
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
-Date: 2013-05-12
-Version: 1.1
+Date: 2013-05-16
+Version: 1.2
 Licence: BSD
 """
 import os
@@ -43,8 +44,7 @@ class ULha(Archive):
             "read": "pq",
             "write": "aq",
             "delete": "dq"}
-    ITEM = ("%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(month)s %(day)s "
-            "%(yh)s %(display_name)s\n")
+    DATETIME = "%(month)s %(day)s %(yh)s"
 
     def _get_dir(self):
         """Prepare archive file listing"""
@@ -72,6 +72,7 @@ class ULha(Archive):
             # really care about real user/group
             entry['uid'] = self._uid
             entry['gid'] = self._gid
+            entry['datetime'] = self.DATETIME % entry
 
             if not entry['perms']:
                 entry['perms'] = perms

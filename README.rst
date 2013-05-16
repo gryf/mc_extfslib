@@ -79,7 +79,7 @@ disk images. Due to limitations of the
 `unadf <http://freecode.com/projects/unadf>`_, file access inside disk image is
 read only.
 
-Note, that in case of no-dos images, directory listing will be empty.
+In case of corrupted or no-dos images, message will be shown.
 
 Requirements
 ------------

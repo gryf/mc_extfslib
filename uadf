@@ -18,12 +18,13 @@ if comment or filename already contains any comma.
 It also requires xdms utility, for optional dms support.
 
 Changelog:
+    1.2 Added failsafe for filenames in archive with spaces and nodos message.
     1.1 Moved common code into extfslib library
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
-Date: 2013-05-12
-Version: 1.1
+Date: 2013-05-16
+Version: 1.2
 Licence: BSD
 """
 
@@ -53,8 +54,6 @@ class UAdf(Archive):
             "write": "w",
             "delete": "d"}
     DATETIME = "%s-%s-%s %02d:%s"
-    ITEM = ("%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
-            "%(display_name)s\n")
 
     def __init__(self, fname):
         """Prepare archive content for operations"""
@@ -141,6 +140,10 @@ class UAdf(Archive):
         Convert filenames to be Unix filesystem friendly
         Add suffix to show user what kind of file do he dealing with.
         """
+        if not self._contents:
+            sys.stderr.write("Nodos or archive error\n")
+            return 1
+
         for entry in self._contents:
             sys.stdout.write(self.ITEM % entry)
         return 0
@@ -150,6 +153,12 @@ class UAdf(Archive):
         real_src = self._get_real_name(src)
         if not real_src:
             raise IOError("No such file or directory")
+
+        if " " in real_src:
+            sys.stderr.write("unadf is unable to operate on filepath with "
+                             "space inside.\nUse affs to mount image and than"
+                             " extract desired files.\n")
+            return 1
 
         extract_dir = mkdtemp()
         cmd = ["unadf", self._arch, real_src, "-d", extract_dir]

@@ -5,11 +5,12 @@ plugins for Midnight Commander.
 Tested against python 2.7 and mc 4.8.7
 
 Changelog:
+    1.1 Added item pattern, and common git/uid attrs
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
 Date: 2013-05-12
-Version: 1.0
+Version: 1.1
 Licence: BSD
 """
 import os
@@ -32,11 +33,15 @@ class Archive(object):
             "read": "r",
             "write": "w",
             "delete": "d"}
+    ITEM = ("%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
+            "%(display_name)s\n")
 
     def __init__(self, fname):
         """Prepare archive content for operations"""
         if not os.path.exists(fname):
             raise OSError("No such file or directory `%s'" % fname)
+        self._uid = os.getuid()
+        self._gid = os.getgid()
         self._arch = fname
         self._contents = self._get_dir()
 
