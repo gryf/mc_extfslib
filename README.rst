@@ -138,3 +138,9 @@ Installation
     # dms
     regex/\.([dD][mM][sS])$
         Open=%cd %p/uadf://
+
+License
+=======
+
+This software is licensed under 3-clause BSD license. See LICENSE file for
+details.
