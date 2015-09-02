@@ -2,14 +2,16 @@
 Midnight Commander extfs
 ========================
 
-Those are Midnight Commander extfs plugins for handling several archive types.
+Those are Midnight Commander extfs plugins for handling several archive types
+mostly known from AmigaOS - like **lha**, **lzx** and disk images like **adf**
+and **dms**.
 
 Installation
 ============
 
 See individual installation plugins below. Basically it comes down to:
 
-* copying ``extfslib.py`` and plugin files to ``~/.local/share/mc/extfs/``
+* copying ``extfslib.py`` and plugin files to ``~/.local/share/mc/extfs.d/``
 * installing binary handlers (lha, unlzx, xdms and unadf)
 * adding an entry in ``~/.config/mc/mc.ext``::
 
@@ -32,7 +34,7 @@ ULha requires `free lha <http://lha.sourceforge.jp>`_ implementation to work.
 Installation
 ------------
 
-* copy ``extfslib.py`` and ``ulha`` to ``~/.local/share/mc/extfs/``
+* copy ``extfslib.py`` and ``ulha`` to ``~/.local/share/mc/extfs.d/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
     # lha
@@ -63,7 +65,7 @@ ULzx requires
 Installation
 ------------
 
-* copy ``extfslib.py`` and ``ulzx`` to ``~/.local/share/mc/extfs/``
+* copy ``extfslib.py`` and ``ulzx`` to ``~/.local/share/mc/extfs.d/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
     # lzx
@@ -121,7 +123,7 @@ needed.
 Installation
 ------------
 
-* copy ``extfslib.py`` and ``uadf`` to ``~/.local/share/mc/extfs/``
+* copy ``extfslib.py`` and ``uadf`` to ``~/.local/share/mc/extfs.d/``
 * add or change entry for files handle in ``~/.config/mc/mc.ext``::
 
     # adf
