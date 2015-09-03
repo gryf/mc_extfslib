@@ -86,36 +86,44 @@ In case of corrupted or no-dos images, message will be shown.
 Requirements
 ------------
 
-It requires the `unadf <http://freecode.com/projects/unadf>`_ utility.
-Unfortunately, the page containing original sources doesn't exists
-anymore. Luckily, there is a copy of the source (and useful patches) in `Debian
-repository <http://packages.debian.org/sid/unadf>`_.
+It requires ``unadf`` utility from `ADFlib <https://github.com/lclevy/ADFlib>`_
+repository, with included `that commit
+<https://github.com/lclevy/ADFlib/commit/d36dc2f395f3e8fcee81f66bc86994e166b6140f>`_
+in particular, which introduced separation between filename and comment
+attribute on Amiga Fast File System.
 
-There should be one change made to the source of unadf, though. While using
-"-lr" switch, unadf by default also displays comments next to file name,
-separated by the comma. If comment or filename contains comma sign, there is no
-way to distinguish where filename ends and comment starts. In ``extras``
-directory there is a patch for fixing this - no comments would be displayed by
-default.
+If it turns out that your distribution doesn't provide proper version of ADFlib,
+there will be a need for building it by hand.
 
-First, grab the sources and Debian patches. Apply them. To do this manually,
-extract ``unadf_0.7.11a-3.debian.tar.gz`` and ``unadf_0.7.11a.orig.tar.gz`` into
-some temporary directory. Apply patches in order like in debian/patches/series
-file. Then apply patch from extras directory::
+It may be done by using following steps:
 
-    $ mkdir temp
-    $ cd temp
-    $ tar zxf ~/Downloads/unadf_0.7.11a-3.debian.tar.gz
-    $ tar zxf ~/Downloads/unadf_0.7.11a.orig.tar.gz
-    $ cd unadf-0.7.11a
+#. Grab the `sources
+   <http://http.debian.net/debian/pool/main/u/unadf/unadf_0.7.11a.orig.tar.gz>`_
+   and `patches
+   <http://http.debian.net/debian/pool/main/u/unadf/unadf_0.7.11a-3.debian.tar.gz>`_
+   from `Debian repository <http://packages.debian.org/sid/unadf>`_.
+#. Extract ``unadf_0.7.11a-3.debian.tar.gz`` and ``unadf_0.7.11a.orig.tar.gz``
+   into some temporary directory::
+
+   $ mkdir temp
+   $ cd temp
+   $ tar zxf ~/Downloads/unadf_0.7.11a-3.debian.tar.gz
+   $ tar zxf ~/Downloads/unadf_0.7.11a.orig.tar.gz
+   $ cd unadf-0.7.11a
+
+#. Apply Debian patches::
+
     $ for i in `cat ../debian/patches/series`; do
     > patch -Np1 < "../debian/patches/${i}"
     > done
-    $ patch -Np1 < [path_to_this_repo]/extras/unadf_separate_comment.patch
-    $ make
-    $ cp Demo/unadf [destination_path]
 
-``unadf`` binary should be placed in ``$PATH``.
+#. Apply the patch from extras directory::
+
+   $ patch -Np1 < [path_to_this_repo]/extras/unadf_separate_comment.patch
+   $ make
+   $ cp Demo/unadf [destination_path]
+
+#. Place ``unadf`` binary under directory reachable by ``$PATH``.
 
 For optional dms support, `xdms <http://zakalwe.fi/~shd/foss/xdms/>`_ utility is
 needed.
