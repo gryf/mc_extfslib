@@ -2,9 +2,10 @@
 extfslib is a library which contains Archive class to support writing extfs
 plugins for Midnight Commander.
 
-Tested against python 2.7 and mc 4.8.7
+Tested against python 3.6 and mc 4.8.22
 
 Changelog:
+    2.0 Switch to python3
     1.1 Added item pattern, and common git/uid attrs
     1.0 Initial release
 
@@ -13,6 +14,7 @@ Date: 2013-05-12
 Version: 1.1
 Licence: BSD
 """
+import argparse
 import os
 import sys
 import re
@@ -33,8 +35,8 @@ class Archive(object):
             "read": "r",
             "write": "w",
             "delete": "d"}
-    ITEM = ("%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
-            "%(display_name)s\n")
+    ITEM = (b"%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
+            b"%(display_name)s\n")
 
     def __init__(self, fname):
         """Prepare archive content for operations"""
@@ -43,13 +45,14 @@ class Archive(object):
         self._uid = os.getuid()
         self._gid = os.getgid()
         self._arch = fname
+        self.name_map = {}
         self._contents = self._get_dir()
 
     def _map_name(self, name):
         """MC still have a bug in extfs subsystem, in case of filepaths with
         leading space. This is workaround to this bug, which replaces leading
         space with tilda."""
-        if name.startswith(" "):
+        if name.startswith(b" "):
             new_name = "".join(["~", name[1:]])
             return new_name
         return name
@@ -58,8 +61,9 @@ class Archive(object):
         """Get real filepath of the file. See _map_name docstring for
         details."""
         for item in self._contents:
-            if item['display_name'] == name:
-                return item['fpath']
+            if item[b'display_name'] == name.encode('utf-8',
+                                                    'surrogateescape'):
+                return item[b'fpath']
         return None
 
     def _get_dir(self):
@@ -72,7 +76,7 @@ class Archive(object):
         if not out:
             return
 
-        for line in out.split("\n"):
+        for line in out.split(b"\n"):
             match = self.LINE_PAT.match(line)
             if not match:
                 continue
@@ -145,6 +149,61 @@ def usage():
            "or: %(prg)s list ARCHNAME\n"
            "or: %(prg)s {mkdir,rm,rmdir,run} ARCHNAME TARGET" %
            {"prg": sys.argv[0]})
+
+
+def _parse_args(arch_class):
+    """Use ArgumentParser to check for script arguments and execute."""
+
+    CALL_MAP = {'list': lambda a: arch_class(a.arch).list(),
+                'copyin': lambda a: arch_class(a.arch).copyin(a.src, a.dst),
+                'copyout': lambda a: arch_class(a.arch).copyout(a.src, a.dst),
+                'mkdir': lambda a: arch_class(a.arch).mkdir(a.dst),
+                'rm': lambda a: arch_class(a.arch).rm(a.dst),
+                'run': lambda a: arch_class(a.arch).run(a.dst)}
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(help='supported commands')
+    parser_list = subparsers.add_parser('list', help="List contents of "
+                                        "archive")
+    parser_copyin = subparsers.add_parser('copyin', help="Copy file into "
+                                          "archive")
+    parser_copyout = subparsers.add_parser('copyout', help="Copy file out of "
+                                           "archive")
+    parser_rm = subparsers.add_parser('rm', help="Delete file from archive")
+    parser_mkdir = subparsers.add_parser('mkdir', help="Create directory in "
+                                         "archive")
+    parser_run = subparsers.add_parser('run', help="Execute archived file")
+
+    parser_list.add_argument('arch', help="Archive filename")
+    parser_list.set_defaults(func=CALL_MAP['list'])
+
+    parser_copyin.add_argument('arch', help="Archive filename")
+    parser_copyin.add_argument('src', help="Source filename")
+    parser_copyin.add_argument('dst', help="Destination filename (to be "
+                               "written into archive)")
+    parser_copyin.set_defaults(func=CALL_MAP['copyin'])
+
+    parser_copyout.add_argument('arch', help="D64 Image filename")
+    parser_copyout.add_argument('src', help="Source filename (to be read from"
+                                " archive")
+    parser_copyout.add_argument('dst', help="Destination filename")
+    parser_copyout.set_defaults(func=CALL_MAP['copyout'])
+
+    parser_rm.add_argument('arch', help="D64 Image filename")
+    parser_rm.add_argument('dst', help="File inside archive to be deleted")
+    parser_rm.set_defaults(func=CALL_MAP['rm'])
+
+    parser_mkdir.add_argument('arch', help="archive filename")
+    parser_mkdir.add_argument('dst', help="Directory name inside archive to "
+                              "be created")
+    parser_mkdir.set_defaults(func=CALL_MAP['mkdir'])
+
+    parser_run.add_argument('arch', help="archive filename")
+    parser_run.add_argument('dst', help="File to be executed")
+    parser_run.set_defaults(func=CALL_MAP['run'])
+
+    args = parser.parse_args()
+    return args.func(args)
 
 
 def parse_args(arch_class):

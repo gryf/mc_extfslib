@@ -1,12 +1,13 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 """
 Lha Virtual filesystem executive for Midnight Commander.
 
-Tested against python 2.7, lha[1] 1.14 and mc 4.8.7
+Tested against python 3.6, lha[1] 1.14 and mc 4.8.22
 
 [1] http://lha.sourceforge.jp
 
 Changelog:
+    2.0 Switch to python3
     1.2 Moved item pattern to extfslib module
     1.1 Moved common code into extfslib library
     1.0 Initial release
@@ -29,22 +30,22 @@ from extfslib import Archive, parse_args
 class ULha(Archive):
     """Archive handle. Provides interface to MC's extfs subsystem"""
 
-    LINE_PAT = re.compile("^((?P<perms>[d-][rswx-]{9})|(\[generic\])|"
-                          "(\[unknown\]))"
-                          "((\s+\d+/\d+\s+)|(\s+))"
-                          "(?P<uid>)(?P<gid>)"  # just for the record
-                          "(?P<size>\d+)"
-                          "\s+(\*{6}|\d+\.\d%)"
-                          "\s(?P<month>[JFMASOND][a-z]{2})\s+"  # month
-                          "(?P<day>\d+)\s+"  # day
-                          "(?P<yh>\d{4}|(\d{2}:\d{2}))"  # year/hour
-                          "\s(?P<fpath>.*)")
-    ARCHIVER = "lha"
-    CMDS = {"list": "lq",
-            "read": "pq",
-            "write": "aq",
-            "delete": "dq"}
-    DATETIME = "%(month)s %(day)s %(yh)s"
+    LINE_PAT = re.compile(b"^((?P<perms>[d-][rswx-]{9})|(\[generic\])|"
+                          b"(\[unknown\]))"
+                          b"((\s+\d+/\d+\s+)|(\s+))"
+                          b"(?P<uid>)(?P<gid>)"  # just for the record
+                          b"(?P<size>\d+)"
+                          b"\s+(\*{6}|\d+\.\d%)"
+                          b"\s(?P<month>[JFMASOND][a-z]{2})\s+"  # month
+                          b"(?P<day>\d+)\s+"  # day
+                          b"(?P<yh>\d{4}|(\d{2}:\d{2}))"  # year/hour
+                          b"\s(?P<fpath>.*)")
+    ARCHIVER = b"lha"
+    CMDS = {"list": b"lq",
+            "read": b"pq",
+            "write": b"aq",
+            "delete": b"dq"}
+    DATETIME = b"%(month)s %(day)s %(yh)s"
 
     def _get_dir(self):
         """Prepare archive file listing"""
@@ -54,37 +55,43 @@ class ULha(Archive):
         if not out:
             return
 
-        for line in out.split("\n"):
+        for line in out.split(b"\n"):
             # -lhd- can store empty directories
-            perms = "-rw-r--r--"
-            if line.endswith(os.path.sep):
+            perms = b"-rw-r--r--"
+            if line.endswith(bytes(os.path.sep, 'utf-8')):
                 line = line[:-1]
-                perms = "drw-r--r--"
+                perms = b"drw-r--r--"
 
             match = self.LINE_PAT.match(line)
             if not match:
                 continue
 
-            entry = match.groupdict()
+            match_entry = match.groupdict()
+            entry = {}
+            for key in match_entry:
+                entry[bytes(key, 'utf-8')] = match_entry[key]
+            del match_entry
             # UID and GID sometimes can have strange values depending on
             # the information that was written into archive. Most of the
             # times I was dealing with Amiga lha archives, so that i don't
             # really care about real user/group
-            entry['uid'] = self._uid
-            entry['gid'] = self._gid
-            entry['datetime'] = self.DATETIME % entry
 
-            if not entry['perms']:
-                entry['perms'] = perms
+            entry[b'uid'] = bytes(str(self._uid), 'utf-8')
+            entry[b'gid'] = bytes(str(self._gid), 'utf-8')
+            entry[b'datetime'] = self.DATETIME % entry
 
-            entry['display_name'] = self._map_name(entry['fpath'])
+            if not entry[b'perms']:
+                entry[b'perms'] = perms
+
+            entry[b'display_name'] = self._map_name(entry[b'fpath'])
             contents.append(entry)
+
         return contents
 
     def list(self):
         """Output contents of the archive to stdout"""
         for entry in self._contents:
-            sys.stdout.write(self.ITEM % entry)
+            sys.stdout.buffer.write(self.ITEM % entry)
         return 0
 
     def rm(self, dst):
