@@ -23,18 +23,18 @@ from subprocess import check_output, CalledProcessError
 
 class Archive(object):
     """Archive handle. Provides interface to MC's extfs subsystem"""
-    LINE_PAT = re.compile("^(?P<size>)\s"
-                          "(?P<perms>)\s"
-                          "(?P<uid>)\s"
-                          "(?P<gid>)\s"
-                          "(?P<date>)\s+"
-                          "(?P<time>)\s"
-                          "(?P<fpath>)")
-    ARCHIVER = "archiver_name"
-    CMDS = {"list": "l",
-            "read": "r",
-            "write": "w",
-            "delete": "d"}
+    LINE_PAT = re.compile(b"^(?P<size>)\s"
+                          b"(?P<perms>)\s"
+                          b"(?P<uid>)\s"
+                          b"(?P<gid>)\s"
+                          b"(?P<date>)\s+"
+                          b"(?P<time>)\s"
+                          b"(?P<fpath>)")
+    ARCHIVER = b"archiver_name"
+    CMDS = {"list": b"l",
+            "read": b"r",
+            "write": b"w",
+            "delete": b"d"}
     ITEM = (b"%(perms)s   1 %(uid)-8s %(gid)-8s %(size)8s %(datetime)s "
             b"%(display_name)s\n")
 
@@ -53,7 +53,7 @@ class Archive(object):
         leading space. This is workaround to this bug, which replaces leading
         space with tilda."""
         if name.startswith(b" "):
-            new_name = "".join(["~", name[1:]])
+            new_name = b"".join([b"~", name[1:]])
             return new_name
         return name
 

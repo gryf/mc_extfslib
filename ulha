@@ -106,8 +106,9 @@ class ULha(Archive):
     def rmdir(self, dst):
         """Remove empty directory"""
         dst = self._get_real_name(dst)
-        if not dst.endswith(os.path.sep):
-            dst += os.path.sep
+
+        if not dst.endswith(bytes(os.path.sep, 'utf-8')):
+            dst += bytes(os.path.sep, 'utf-8')
 
         if self._call_command('delete', dst=dst) is None:
             return 1
@@ -148,12 +149,13 @@ class ULha(Archive):
         os.chdir(tmpdir)
         if src:
             os.makedirs(os.path.dirname(dst))
-            os.link(src, dst)
+            shutil.copy2(src, dst)
         else:
             os.makedirs(dst)
 
         try:
-            result = check_call([self.ARCHIVER, self.CMDS["write"],
+            result = check_call([self.ARCHIVER.decode('utf-8'),
+                                 self.CMDS["write"].decode('utf-8'),
                                  arch_abspath, dst])
         except CalledProcessError:
             return 1
