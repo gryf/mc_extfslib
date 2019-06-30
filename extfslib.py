@@ -10,8 +10,8 @@ Changelog:
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
-Date: 2013-05-12
-Version: 1.1
+Date: 2019-06-30
+Version: 2.0
 Licence: BSD
 """
 import argparse
