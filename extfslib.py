@@ -5,13 +5,13 @@ plugins for Midnight Commander.
 Tested against python 3.6 and mc 4.8.22
 
 Changelog:
-    2.0 Switch to python3
+    1.2 Switch to python3
     1.1 Added item pattern, and common git/uid attrs
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
 Date: 2019-06-30
-Version: 2.0
+Version: 1.2
 Licence: BSD
 """
 import argparse
