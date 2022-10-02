@@ -7,6 +7,7 @@ Midnight Commander extfslib
 
 Midnight Commander extfslib helper library for writing extfs archive plugins.
 
+
 Description
 ===========
 
@@ -15,7 +16,7 @@ those which operates on different kind of archives.
 
 Simplest plugin built on top of this lib would be:
 
-.. code::python
+.. code:: python
 
    import extfslib
 
@@ -63,19 +64,19 @@ Installation
 
 Install from Pypi
 
-.. code::shell-session
+.. code:: shell-session
 
    # pip install extfslib
 
 or, as a user:
 
-.. code::shell-session
+.. code:: shell-session
 
    $ pip install extfslib --user
 
 or use virtualenv:
 
-.. code::shell-session
+.. code:: shell-session
 
    $ git clone https://github.com/gryf/mc_extfslib
    $ cd mc_extfslib
@@ -83,15 +84,6 @@ or use virtualenv:
    $ source venv/bin/activate
    (venv) $ pip install
 
-See individual installation plugins below. Basically it comes down to:
-
-* copying ``extfslib.py`` and plugin files to ``~/.local/share/mc/extfs.d/``
-* installing binary handlers (lha, unlzx, xdms and unadf)
-* adding an entry in ``~/.config/mc/mc.ext``::
-
-    # arch
-    regex/\.pattern$
-         Open=%cd %p/handler_filename://
 
 License
 =======
