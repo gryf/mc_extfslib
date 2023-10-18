@@ -11,7 +11,7 @@ Midnight Commander extfslib helper library for writing extfs archive plugins.
 Description
 ===========
 
-Extfslib help with building Midnight Commander extf plugins, especially for
+Extfslib help with building Midnight Commander extfs plugins, especially for
 those which operates on different kind of archives.
 
 Simplest plugin built on top of this lib would be:
@@ -37,8 +37,8 @@ Simplest plugin built on top of this lib would be:
    arch.list()
 
 
-In this example class instance should be able to be called with ``list`` method.
-All methods:
+In this example class instance should be able to be called with ``list``
+method.  All methods:
 
 - ``list``
 - ``copyin``

@@ -23,13 +23,13 @@ from subprocess import check_output, CalledProcessError
 
 class Archive(object):
     """Archive handle. Provides interface to MC's extfs subsystem"""
-    LINE_PAT = re.compile(b"^(?P<size>)\s"
-                          b"(?P<perms>)\s"
-                          b"(?P<uid>)\s"
-                          b"(?P<gid>)\s"
-                          b"(?P<date>)\s+"
-                          b"(?P<time>)\s"
-                          b"(?P<fpath>)")
+    LINE_PAT = re.compile(br"^(?P<size>)\s"
+                          br"(?P<perms>)\s"
+                          br"(?P<uid>)\s"
+                          br"(?P<gid>)\s"
+                          br"(?P<date>)\s+"
+                          br"(?P<time>)\s"
+                          br"(?P<fpath>)")
     ARCHIVER = b"archiver_name"
     CMDS = {"list": b"l",
             "read": b"r",
@@ -145,10 +145,10 @@ class Archive(object):
 
 def usage():
     """Print out usage information"""
-    print ("Usage: %(prg)s {copyin,copyout} ARCHNAME SOURCE DESTINATION\n"
-           "or: %(prg)s list ARCHNAME\n"
-           "or: %(prg)s {mkdir,rm,rmdir,run} ARCHNAME TARGET" %
-           {"prg": sys.argv[0]})
+    print("Usage: %(prg)s {copyin,copyout} ARCHNAME SOURCE DESTINATION\n"
+          "or: %(prg)s list ARCHNAME\n"
+          "or: %(prg)s {mkdir,rm,rmdir,run} ARCHNAME TARGET" %
+          {"prg": sys.argv[0]})
 
 
 def _parse_args(arch_class):
@@ -183,13 +183,13 @@ def _parse_args(arch_class):
                                "written into archive)")
     parser_copyin.set_defaults(func=CALL_MAP['copyin'])
 
-    parser_copyout.add_argument('arch', help="D64 Image filename")
+    parser_copyout.add_argument('arch', help="archive or image filename")
     parser_copyout.add_argument('src', help="Source filename (to be read from"
                                 " archive")
     parser_copyout.add_argument('dst', help="Destination filename")
     parser_copyout.set_defaults(func=CALL_MAP['copyout'])
 
-    parser_rm.add_argument('arch', help="D64 Image filename")
+    parser_rm.add_argument('arch', help="archive or image filename")
     parser_rm.add_argument('dst', help="File inside archive to be deleted")
     parser_rm.set_defaults(func=CALL_MAP['rm'])
 
