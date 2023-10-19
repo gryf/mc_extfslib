@@ -16,9 +16,9 @@ Licence: BSD
 """
 import argparse
 import os
-import sys
 import re
-from subprocess import check_output, CalledProcessError
+import subprocess
+import sys
 
 
 class Archive(object):
@@ -102,8 +102,8 @@ class Archive(object):
             command.append(src and src or dst)
 
         try:
-            output = check_output(command)
-        except CalledProcessError:
+            output = subprocess.check_output(command)
+        except subprocess.CalledProcessError:
             sys.exit(1)
         return output
 
