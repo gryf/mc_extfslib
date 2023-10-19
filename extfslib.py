@@ -2,23 +2,69 @@
 extfslib is a library which contains Archive class to support writing extfs
 plugins for Midnight Commander.
 
-Tested against python 3.6 and mc 4.8.22
+Tested against python 3.11 and mc 4.8.29
 
 Changelog:
+    1.3 Added ability to read config from mc/ini file.
     1.2 Switch to python3
     1.1 Added item pattern, and common git/uid attrs
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
-Date: 2019-06-30
-Version: 1.2
+Date: 2023-10-18
+Version: 1.3
 Licence: BSD
 """
 import argparse
+import configparser
 import os
 import re
 import subprocess
 import sys
+
+XDG_CONF_DIR = os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config'))
+
+
+class Config:
+    """An optional config class, a helper to get and parse MC ini file"""
+
+    def __init__(self, caller):
+        self._config = self._get_config()
+        self._class_name = caller.__class__.__name__.lower()
+
+    def _get_config(self):
+        """Read MC main config file"""
+        conf_file = os.path.join(XDG_CONF_DIR, 'mc/ini')
+        conf_parser = configparser.ConfigParser()
+        conf_parser.read(conf_file)
+        return conf_parser
+
+    def getboolean(self, name):
+        try:
+            return self._config.getboolean(self._class_name, name)
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+    def getint(self, name):
+        try:
+            return self._config.getint(self._class_name, name)
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+    def getfloat(self, name):
+        try:
+            return self._config.getfloat(self._class_name, name)
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
+
+    def get(self, name):
+        return getattr(self, name)
+
+    def __getattr__(self, name):
+        try:
+            return self._config.get(self._class_name, name)
+        except (configparser.NoOptionError, configparser.NoSectionError):
+            pass
 
 
 class Archive(object):
