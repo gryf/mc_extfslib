@@ -58,6 +58,38 @@ which holds the output pattern and utilizes dictionary from ``LINE_PAT``,
 ``CMD`` which maps between class and archiver commands. Possibly there might be
 needed some other adjustments.
 
+Additionally there is an optional ``Config`` class, which might be used for
+reading Midnight Commander ini file (ususally located in ``~/.config/mc/ini``),
+so that for the example above:
+
+.. code:: python
+
+   import extfslib
+
+
+   class MyArchive(extfslib.Archive):
+
+       ARCHIVER = "fancyarch"
+
+       def __init__(self):
+           super().__init__()
+           self.conf = extfslib.Config(self)
+           if self.conf,getint('config_key'):
+               # do something
+
+where the ``ini`` config file would contain:
+
+.. code:: ini
+
+   …
+   [myarchive]
+   config_key = 300
+   …
+
+So, section name ``[myarchive]`` must match class name in lower case, and name
+of the option is arbitrary string folowed by value. Note, the section and
+options must be added manually.
+
 
 Installation
 ============
