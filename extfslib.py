@@ -5,14 +5,15 @@ plugins for Midnight Commander.
 Tested against python 3.11 and mc 4.8.29
 
 Changelog:
+    1.4 Detect byts/string, and load config by default
     1.3 Added ability to read config from mc/ini file.
     1.2 Switch to python3
     1.1 Added item pattern, and common git/uid attrs
     1.0 Initial release
 
 Author: Roman 'gryf' Dobosz <gryf73@gmail.com>
-Date: 2023-10-18
-Version: 1.3
+Date: 2023-10-22
+Version: 1.4
 Licence: BSD
 """
 import argparse
@@ -93,23 +94,33 @@ class Archive(object):
         self._arch = fname
         self.name_map = {}
         self._contents = self._get_dir()
+        self.config = Config(self)
 
     def _map_name(self, name):
         """MC still have a bug in extfs subsystem, in case of filepaths with
         leading space. This is workaround to this bug, which replaces leading
         space with tilda."""
-        if name.startswith(b" "):
-            new_name = b"".join([b"~", name[1:]])
-            return new_name
+        if isinstance(name, bytes):
+            if name.startswith(b" "):
+                new_name = b"".join([b"~", name[1:]])
+                return new_name
+        else:
+            if name.startswith(" "):
+                new_name = "".join(["~", name[1:]])
+                return new_name
         return name
 
     def _get_real_name(self, name):
         """Get real filepath of the file. See _map_name docstring for
         details."""
         for item in self._contents:
-            if item[b'display_name'] == name.encode('utf-8',
-                                                    'surrogateescape'):
-                return item[b'fpath']
+            if isinstance(name, bytes):
+                if item[b'display_name'] == name.encode('utf-8',
+                                                        'surrogateescape'):
+                    return item[b'fpath']
+            else:
+                if item['display_name'] == name:
+                    return item['fpath']
         return None
 
     def _get_dir(self):
